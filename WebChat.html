@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Web Chat with Rail Fence Encryption</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        #chat-container {
+            width: 800px;
+            height: 500px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        h1 {
+            text-align: center;
+            margin: 0 0 20px;
+        }
+
+        .message-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .message {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+
+        .original-message {
+            background-color: #e0e0e0;
+            align-self: flex-end;
+        }
+
+        .encrypted-message {
+            background-color: #f0f0f0;
+            align-self: flex-start;
+        }
+
+        .input-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 0;
+        }
+
+        #input-message {
+            flex-grow: 1;
+            padding: 10px;
+        }
+
+        #send-button {
+            background-color: #0074d9;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <h1>Web Chat with Rail Fence Encryption</h1>
+        <div class="message-container" id="messages"></div>
+        <div class="input-container">
+            <input type="text" id="input-message" placeholder="Type your message..." />
+            <button id="send-button">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const railCount = 2; // กำหนดจำนวนแถวที่ต้องการสำหรับการเข้ารหัสแบบ Rail Fence
+        // ฟังก์ชันการเข้ารหัสด้วยวิธี Rail Fence
+        function railFenceEncrypt(message, railCount) { // รับค่า Input และ จำนวนแถวของ Rail Fence ที่กำหนดไว้
+            const rails = Array.from({ length: railCount }, () => []); // สร้าง array ไว้ใช้เก็บค่าในตาราง Rail Fence
+            let railIndex = 0; // ใช้ระบุตำแหน่งปัจจุบันที่ต้องนำตัวอักษรเข้าตาราง Rail Fence
+            let direction = 1; // ใช้ระบุตำแหน่งต่อไปที่ต้องนำตัวอักษรเข้าตาราง Rail Fence
+
+            for (let char of message) {
+                rails[railIndex].push(char); // ทำการนำค่าอักษร ณ ตำแหน่งปัจจุบันใส่ลงใน array ของตาราง Rail Fence
+                if (railIndex === 0) direction = 1; // ถ้าตำแหน่งปัจจุบันอยู่ที่แถวแรกสุด ให้กำหนดตำแหน่งต่อไปอยู่ที่แถวด้านล่างของตำแหน่งปัจจุบัน
+                if (railIndex === railCount - 1) direction = -1; // ถ้าตำแหน่งปัจจุบันอยู่ที่แถวล่างสุด ให้กำหนดตำแหน่งต่อไปอยู่ที่แถวด้านบนของตำแหน่งปัจจุบัน
+                railIndex += direction; // ทำเพื่อใช้ระบุทิศทางหรือตำแหน่งต่อไปที่ต้องใส่ค่าในตาราง Rail Fence
+            }
+
+            return rails.flat().join(""); // ทำให้ค่าใน array ทุกตัวเรียงต่อกันด้วย .flat() และ ทำให้ค่าทุกตัวเชื่อมกันเป็น String เดียวด้วย .join("")
+        }
+
+        const messagesDiv = document.getElementById("messages");
+        const inputMessage = document.getElementById("input-message");
+        const sendButton = document.getElementById("send-button");
+
+        sendButton.addEventListener("click", () => {
+            const originalMessage = inputMessage.value; // นำค่า input ไปเก็บไว้ในตัวแปรเพื่อนำไปใช้ดำเนินการ Encryption
+            if (originalMessage.trim() !== "") { // ใช้ .trim() เข้ามาช่วยเพื่อป้องการส่ง blank-space เข้าไปในการ Encryption
+                
+                // เรียกใช้ฟังก์ชัน Encryption แล้วนำผลลัพธ์ไปเก็บไว้ในตัวแปร
+                const encryptedMessage = railFenceEncrypt(originalMessage, railCount);
+
+                // เก็บค่าเพื่อใช้ระบุตำแหน่งที่จะใช้แสดงแชทในตัวแปร
+                const messageContainer = document.querySelector(".message-container");
+
+                // ส่วนของแชทที่ใช้แสดงข้อมูลดั่งเดิมก่อนการ Encryption
+                const originalMessageDiv = document.createElement("div"); // สร้างตัวแปรไว้เก็บค่าข้อมูลที่ input เข้าไป
+                originalMessageDiv.classList.add("message", "original-message");
+                originalMessageDiv.textContent = `You: ${originalMessage}`;
+                messageContainer.appendChild(originalMessageDiv);
+
+                // ส่วนของแชทที่ใช้แสดงข้อมูลหลังผ่านการ Encryption
+                const encryptedMessageDiv = document.createElement("div"); // สร้างตัวแปรไว้เก็บค่าข้อมูลหลังการ Encryption
+                encryptedMessageDiv.classList.add("message", "encrypted-message");
+                encryptedMessageDiv.textContent = `Encrypted: ${encryptedMessage}`;
+                messageContainer.appendChild(encryptedMessageDiv);
+
+                inputMessage.value = ""; // reset ค่า input
+
+                // กำหนดให้แสดงข้อมูลแชทล่าสุดที่ส่งเข้าไป
+                messageContainer.scrollTop = messageContainer.scrollHeight;
+            }
+        });
+
+        inputMessage.addEventListener("keyup", (event) => {
+            if (event.key === "Enter") {
+                sendButton.click();
+            }
+        });
+    </script>
+</body>
+</html>
